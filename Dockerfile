@@ -1,30 +1,15 @@
-# Multi-stage build for production optimization
-
-# Stage 1: Build the frontend
-FROM node:18-alpine AS frontend-builder
-WORKDIR /app/frontend
-COPY ../pockemen-frontend/package*.json ./
-RUN npm ci --only=production
-COPY ../pockemen-frontend/ ./
-RUN npm run build
-
-# Stage 2: Build the backend
-FROM node:18-alpine AS backend-builder
-WORKDIR /app/backend
-COPY package*.json ./
-RUN npm ci --only=production
-
-# Stage 3: Production image
 FROM node:18-alpine
 WORKDIR /app
 ENV NODE_ENV=production
 
-# Copy backend dependencies and source
-COPY --from=backend-builder /app/backend/node_modules ./node_modules
-COPY . .
+# Copy package files
+COPY package*.json ./
 
-# Copy built frontend
-COPY --from=frontend-builder /app/frontend/dist ./pockemen-frontend/dist
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy the rest of the backend files
+COPY . .
 
 # Expose port
 EXPOSE 5000
